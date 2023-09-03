@@ -8,11 +8,12 @@ const app = new Elysia()
   .get("/", ({ html }) =>
     html(
       <BaseHtml>
-        <body
+        <div
           class="flex h-screen w-full justify-center items-center"
           hx-get="/todos"
           hx-trigger="load"
           hx-swap="innerHTML"
+          id="container-body"
         />
       </BaseHtml>
     )
@@ -48,6 +49,15 @@ const app = new Elysia()
       }),
     }
   )
+  .get("/dummy", ({ html }) =>
+    html(
+      <BaseHtml>
+        <div class="flex h-screen w-full justify-center items-center text-blue-700">
+          Dummy Page
+        </div>
+      </BaseHtml>
+    )
+  )
   .listen(8080);
 
 console.log(
@@ -66,7 +76,9 @@ const BaseHtml = ({ children }: elements.Children) => `
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="/styles.css" rel="stylesheet">
 </head>
-${children}
+<body>
+  ${children}
+</body>
 `;
 
 export type Todo = {
