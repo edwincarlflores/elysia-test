@@ -1,30 +1,35 @@
-FROM debian:11.6-slim as builder
+# Adjust BUN_VERSION as desired
+ARG BUN_VERSION=0.8.1
+FROM oven/bun:${BUN_VERSION} as base
 
+# Bun app lives here
 WORKDIR /app
 
-RUN apt update
-RUN apt install curl unzip -y
+# Set production environment
+ENV NODE_ENV=production
 
-RUN curl https://bun.sh/install | bash
 
-COPY package.json .
-COPY bun.lockb .
+# Throw-away build stage to reduce size of final image
+FROM base as build
 
-RUN /root/.bun/bin/bun install --production
+# Install packages needed to build node modules
+RUN apt-get update -qq && \
+  apt-get install -y python-is-python3 pkg-config build-essential 
 
-# ? -------------------------
-FROM gcr.io/distroless/base
+# Install node modules
+COPY --link bun.lockb package.json ./
+RUN bun install --ci
 
-WORKDIR /app
+# Copy application code
+COPY --link . .
 
-COPY --from=builder /root/.bun/bin/bun bun
-COPY --from=builder /app/node_modules node_modules
 
-COPY src src
-# COPY public public
-# COPY tsconfig.json .
+# Final stage for app image
+FROM base
 
-ENV ENV production
-CMD ["./bun", "src/index.tsx"]
+# Copy built application
+COPY --from=build /app /app
 
+# Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
+CMD [ "bun", "src/index.tsx" ]
