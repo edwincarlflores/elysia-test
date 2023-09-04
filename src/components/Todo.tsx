@@ -24,12 +24,26 @@ export const TodoItem = ({ completed, content, id }: Todo) => {
   );
 };
 
+export const TodoForm = () => {
+  return (
+    <form
+      class="flex flex-row space-x-3"
+      hx-post="/todos"
+      hx-swap="beforebegin"
+    >
+      <input type="text" name="content" class="border border-black" />
+      <button type="submit">Add</button>
+    </form>
+  );
+};
+
 export const TodoList = ({ todos }: { todos: Todo[] }) => {
   return (
     <div>
       {todos.map((todo) => (
         <TodoItem {...todo} />
       ))}
+      <TodoForm />
     </div>
   );
 };

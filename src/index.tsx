@@ -3,6 +3,42 @@ import { html } from "@elysiajs/html";
 import * as elements from "typed-html";
 import { TodoItem, TodoList } from "./components/Todo";
 
+export type Todo = {
+  id: number;
+  content: string;
+  completed: boolean;
+};
+
+const db: Todo[] = [
+  {
+    id: 1,
+    content: "First item",
+    completed: true,
+  },
+  {
+    id: 2,
+    content: "Second item",
+    completed: false,
+  },
+];
+
+const BaseHtml = ({ children }: elements.Children) => `
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE BETH STACK</title>
+  <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="/styles.css" rel="stylesheet">
+</head>
+<body>
+  ${children}
+</body>
+`;
+
 const app = new Elysia()
   .use(html())
   .get("/", ({ html }) =>
@@ -18,7 +54,6 @@ const app = new Elysia()
       </BaseHtml>
     )
   )
-  .post("/clicked", () => <div class="text-blue-500">I'm from the server!</div>)
   .get("/todos", () => <TodoList todos={db} />)
   .post(
     "/todos/toggle/:id",
@@ -49,6 +84,31 @@ const app = new Elysia()
       }),
     }
   )
+  .post(
+    "/todos",
+    ({ body }) => {
+      if (body.content.length === 0) {
+        throw new Error("Content cannot be empty");
+      }
+
+      const dbRowsCount = db.length;
+
+      const newTodo: Todo = {
+        id: dbRowsCount + 1,
+        content: body.content,
+        completed: false,
+      };
+
+      db.push(newTodo);
+
+      return <TodoItem {...newTodo} />;
+    },
+    {
+      body: t.Object({
+        content: t.String(),
+      }),
+    }
+  )
   .get("/dummy", ({ html }) =>
     html(
       <BaseHtml>
@@ -63,39 +123,3 @@ const app = new Elysia()
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
 );
-
-const BaseHtml = ({ children }: elements.Children) => `
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THE BETH STACK</title>
-  <script src="https://unpkg.com/htmx.org@1.9.5"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="/styles.css" rel="stylesheet">
-</head>
-<body>
-  ${children}
-</body>
-`;
-
-export type Todo = {
-  id: number;
-  content: string;
-  completed: boolean;
-};
-
-const db: Todo[] = [
-  {
-    id: 1,
-    content: "First item",
-    completed: true,
-  },
-  {
-    id: 2,
-    content: "Second item",
-    completed: false,
-  },
-];
