@@ -1,7 +1,8 @@
 import { Elysia, t } from "elysia";
 import { html } from "@elysiajs/html";
 import * as elements from "typed-html";
-import { TodoItem, TodoList } from "./components/Todo";
+import { todosRoutes } from "./routes/Todos";
+import { dummyRoutes } from "./routes/Dummy";
 
 const app = new Elysia()
   .use(html())
@@ -18,53 +19,16 @@ const app = new Elysia()
       </BaseHtml>
     )
   )
+  .use(todosRoutes)
+  .use(dummyRoutes)
   .post("/clicked", () => <div class="text-blue-500">I'm from the server!</div>)
-  .get("/todos", () => <TodoList todos={db} />)
-  .post(
-    "/todos/toggle/:id",
-    ({ params }) => {
-      const todo = db.find((todo) => todo.id === params.id);
-      if (todo) {
-        todo.completed = !todo.completed;
-        return <TodoItem {...todo} />;
-      }
-    },
-    {
-      params: t.Object({
-        id: t.Numeric(),
-      }),
-    }
-  )
-  .delete(
-    "/todos/:id",
-    ({ params }) => {
-      const todo = db.find((todo) => todo.id === params.id);
-      if (todo) {
-        db.splice(db.indexOf(todo), 1);
-      }
-    },
-    {
-      params: t.Object({
-        id: t.Numeric(),
-      }),
-    }
-  )
-  .get("/dummy", ({ html }) =>
-    html(
-      <BaseHtml>
-        <div class="flex h-screen w-full justify-center items-center text-blue-700">
-          Dummy Page
-        </div>
-      </BaseHtml>
-    )
-  )
   .listen(8080);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
 );
 
-const BaseHtml = ({ children }: elements.Children) => `
+export const BaseHtml = ({ children }: elements.Children) => `
 <!DOCTYPE html>
 <html lang="en">
 
@@ -87,7 +51,7 @@ export type Todo = {
   completed: boolean;
 };
 
-const db: Todo[] = [
+export const db: Todo[] = [
   {
     id: 1,
     content: "First item",
